@@ -1,5 +1,5 @@
 # PyNBoids
-[![Preview](pynboids.mp4 "Preview")
+[![Preview](https://github.com/36032928-a541-4315-a8f6-1be395113f34 "Preview")]
 
 I took Niko's Boids sipreview.gifmulation and added a few options:
 * CLI options with help (--help)
