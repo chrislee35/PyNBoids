@@ -1,7 +1,7 @@
 # PyNBoids
-![Preview](preview.gif "Preview")
+[![Preview](pynboids.mp4 "Preview")
 
-I took Niko's Boids simulation and added a few options:
+I took Niko's Boids sipreview.gifmulation and added a few options:
 * CLI options with help (--help)
 * Clock display (--clock)
 * Timer countdown (--timer $SEC)
