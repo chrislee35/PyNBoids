@@ -1,7 +1,7 @@
 # PyNBoids
 [![Preview](https://github.com/user-attachments/assets/0fb46afe-3879-4f92-88ee-d8171e5432ad "Preview")]
 
-I took Niko's Boids sipreview.gifmulation and added a few options:
+I took Niko's Boids simulation and added a few options:
 * CLI options with help (--help)
 * Clock display (--clock)
 * Timer countdown (--timer $SEC)
