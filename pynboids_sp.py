@@ -146,11 +146,12 @@ class BoidScreensaver:
         self.bgcolor = (0,0,0)
         self.fps = 60
         self.timer = timer
-        if timer:
-            self.end_time = time.time() + timer
+        self.windowed = True
         
     def start(self):
         self.start_time = time.time()
+        if self.timer:
+            self.end_time = self.start_time + self.timer
         pg.init()  # prepare window
         pg.display.set_caption("PyNBoids")
         try:
@@ -162,16 +163,20 @@ class BoidScreensaver:
             self.size = (pg.display.Info().current_w, pg.display.Info().current_h)
             screen = pg.display.set_mode(self.size, pg.SCALED | pg.NOFRAME | pg.FULLSCREEN, vsync=1)
             pg.mouse.set_visible(False)
-        else: 
+        elif self.windowed:
             screen = pg.display.set_mode(self.size, pg.RESIZABLE | pg.SCALED, vsync=1)
+        else:
+            screen = pg.display.set_mode(self.size, pg.RESIZABLE | pg.NOFRAME, vsync=1)
 
         boidTracker = BoidGrid()
         nBoids = pg.sprite.Group()
         # spawns desired # of boidz
         for n in range(self.boidz):
             nBoids.add(Boid(boidTracker, screen, self.fish))
-
-        font = pg.font.Font(None, 260)
+        font_size = 260
+        if font_size > self.size[1] // 3:
+            font_size = self.size[1] // 3
+        font = pg.font.Font(None, font_size)
         offset = None
         clock = pg.time.Clock()
         # main loop
@@ -224,6 +229,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--bgcolor', nargs=3, type=int, default=(0,0,0), help='background color')
     parser.add_argument('-t', '--timer', type=int, default=None, help='number of second for a timer, at the end of which, this will exit')
     parser.add_argument('--speed', type=int, default=150, help='base speed of fish')
+    parser.add_argument('-x', '--small', action='store_true', default=False, help='sets the size to a small window, no windowing')
     args = parser.parse_args()
 
     show = None
@@ -235,7 +241,11 @@ if __name__ == '__main__':
     bs.fish = args.fish
     bs.boidz = args.number
     bs.bgcolor = args.bgcolor
-    if not args.size:
+    if args.small:
+        bs.fullscreen = False
+        bs.size = (322, 200)
+        bs.windowed = False
+    elif not args.size:
         bs.fullscreen = True
     else:
         bs.size = args.size
