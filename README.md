@@ -21,9 +21,17 @@ options:
                         number of swimmers
   -b BGCOLOR BGCOLOR BGCOLOR, --bgcolor BGCOLOR BGCOLOR BGCOLOR
                         background color
+  --color COLOR COLOR COLOR
+                        text color
   -t TIMER, --timer TIMER
                         number of second for a timer, at the end of which, this will exit
+  -u UNTIL, --until UNTIL
+                        like timer, but it calculates the countdown until a given time
   --speed SPEED         base speed of fish
+  -x, --small           sets the size to a small window, no windowing
+  --top TOP             sets static text at the top
+  --bottom BOTTOM       sets static text at the bottom
+  --follow              follow mouse direction from center
 ```
 
 Also, each fish has a slightly different speed and the simulation speeds up and slows down over time.
