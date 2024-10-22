@@ -3,8 +3,6 @@ from math import pi, sin, cos, atan2, radians, degrees
 from random import randint, random
 import time
 import pygame as pg
-import typer
-from typing_extensions import Annotated
 from datetime import datetime, timedelta
 
 '''
