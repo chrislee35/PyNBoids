@@ -284,6 +284,7 @@ if __name__ == '__main__':
     parser.add_argument('-x', '--small', action='store_true', default=False, help='sets the size to a small window, no windowing')
     parser.add_argument('--top', default=None, help='sets static text at the top')
     parser.add_argument('--bottom', default=None, help='sets static text at the bottom')
+    parser.add_argument('--follow', action='store_true', default=False, help='follow mouse direction from center')
     args = parser.parse_args()
 
     bs = BoidScreensaver()
@@ -315,5 +316,6 @@ if __name__ == '__main__':
     bs.wrap = args.wrap
     bs.top_text = args.top
     bs.bottom_text = args.bottom
+    bs.follow_mouse = args.follow
     bs.start()
     pg.quit()
