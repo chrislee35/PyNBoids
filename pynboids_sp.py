@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
 from math import pi, sin, cos, atan2, radians, degrees
-from random import randint
+from random import randint, random
+import time
 import pygame as pg
+import typer
+from typing_extensions import Annotated
+
 
 '''
 PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
 This version uses a spatial partitioning grid to improve performance.
 Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
 '''
-FLLSCRN = True          # True for Fullscreen, or False for Window
-BOIDZ = 200             # How many boids to spawn, too many may slow fps
-WRAP = False            # False avoids edges, True wraps to other side
-FISH = False            # True to turn boids into fish
-SPEED = 150             # Movement speed
-WIDTH = 1200            # Window Width (1200)
-HEIGHT = 800            # Window Height (800)
-BGCOLOR = (0, 0, 0)     # Background color in RGB
-FPS = 60                # 30-90
-SHOWFPS = False         # frame rate debug
-
 
 class Boid(pg.sprite.Sprite):
 
@@ -33,7 +26,8 @@ class Boid(pg.sprite.Sprite):
         if isFish:  # (randint(120,300) + 180) % 360  #4noblues
             pg.draw.polygon(self.image, self.color, ((7,0),(12,5),(3,14),(11,14),(2,5),(7,0)), width=3)
             self.image = pg.transform.scale(self.image, (16, 24))
-        else : pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0)))
+        else:
+            pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0)))
         self.bSize = 22 if isFish else 17
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
         self.dir = pg.Vector2(1, 0)  # sets up forward direction
@@ -43,6 +37,7 @@ class Boid(pg.sprite.Sprite):
         self.pos = pg.Vector2(self.rect.center)
         self.grid_lastpos = self.grid.getcell(self.pos)
         self.grid.add(self, self.grid_lastpos)
+        self.speed_factor = ((random() - 0.5)*0.5) + 1.0
 
     def update(self, dt, speed, ejWrap=False):
         maxW, maxH = self.drawSurf.get_size()
@@ -100,7 +95,7 @@ class Boid(pg.sprite.Sprite):
         self.image = pg.transform.rotate(self.orig_image, -self.ang)
         self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
         self.dir = pg.Vector2(1, 0).rotate(self.ang).normalize()
-        self.pos += self.dir * dt * (speed + (7 - ncount) * 5)  # movement speed
+        self.pos += self.dir * dt * ((self.speed_factor*speed) + (7 - ncount) * 5)  # movement speed
         # Optional screen wrap
         if ejWrap and not self.drawSurf.get_rect().contains(self.rect):
             if self.rect.bottom < 0 : self.pos.y = maxH
@@ -139,43 +134,112 @@ class BoidGrid():  # tracks boids in spatial partition grid
             nearby.remove(boid)
         return nearby
 
+class BoidScreensaver:
+    def __init__(self, fullscreen=True, show=None, size_wh: tuple[int]=(1200,800), timer: int=None):
+        self.fullscreen = fullscreen
+        self.show = show # None, or "clock" or "timer"
+        self.size = size_wh
+        self.boidz = 200
+        self.wrap = False
+        self.fish = False
+        self.speed = 150
+        self.bgcolor = (0,0,0)
+        self.fps = 60
+        self.timer = timer
+        if timer:
+            self.end_time = time.time() + timer
+        
+    def start(self):
+        self.start_time = time.time()
+        pg.init()  # prepare window
+        pg.display.set_caption("PyNBoids")
+        try:
+            pg.display.set_icon(pg.image.load("nboids.png"))
+        except:
+            print("Note: nboids.png icon not found, skipping..")
+        # setup fullscreen or window mode
+        if self.fullscreen:
+            self.size = (pg.display.Info().current_w, pg.display.Info().current_h)
+            screen = pg.display.set_mode(self.size, pg.SCALED | pg.NOFRAME | pg.FULLSCREEN, vsync=1)
+            pg.mouse.set_visible(False)
+        else: 
+            screen = pg.display.set_mode(self.size, pg.RESIZABLE | pg.SCALED, vsync=1)
 
-def main():
-    pg.init()  # prepare window
-    pg.display.set_caption("PyNBoids")
-    try: pg.display.set_icon(pg.image.load("nboids.png"))
-    except: print("Note: nboids.png icon not found, skipping..")
-    # setup fullscreen or window mode
-    if FLLSCRN:
-        currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
-        screen = pg.display.set_mode(currentRez, pg.SCALED | pg.NOFRAME | pg.FULLSCREEN, vsync=1)
-        pg.mouse.set_visible(False)
-    else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE | pg.SCALED, vsync=1)
+        boidTracker = BoidGrid()
+        nBoids = pg.sprite.Group()
+        # spawns desired # of boidz
+        for n in range(self.boidz):
+            nBoids.add(Boid(boidTracker, screen, self.fish))
 
-    boidTracker = BoidGrid()
-    nBoids = pg.sprite.Group()
-    # spawns desired # of boidz
-    for n in range(BOIDZ) : nBoids.add(Boid(boidTracker, screen, FISH))
+        font = pg.font.Font(None, 260)
+        offset = None
+        clock = pg.time.Clock()
+        # main loop
+        while True:
+            for e in pg.event.get():
+                if e.type == pg.QUIT or e.type == pg.KEYDOWN and (e.key == pg.K_ESCAPE or e.key == pg.K_q or e.key==pg.K_SPACE):
+                    return
 
-    if SHOWFPS : font = pg.font.Font(None, 30)
-    clock = pg.time.Clock()
+            dt = clock.tick(self.fps) / 1000
+            screen.fill(self.bgcolor)
+            # update boid logic, then draw them
+            delta_t = time.time() - self.start_time
+            speed = int(cos(delta_t)*(self.speed/3) + self.speed)
+            
+            nBoids.update(dt, speed, self.wrap)
+            nBoids.draw(screen)
+            # if true, displays the fps in the upper left corner, for debugging
+            if self.show == "clock":
+                rendered = font.render(time.strftime("%H:%M:%S"), True, [0,200,0])
+            elif self.show == "timer":
+                remainder = self.end_time - time.time()
+                if remainder < 0.0:
+                    return
+                remainder_str = time.strftime("%H:%M:%S", time.gmtime(int(remainder)))
+                rendered = font.render(remainder_str, True, [0,200,0])
+            elif self.show == "both":
+                remainder = self.end_time - time.time()
+                if remainder < 0.0:
+                    return
+                remainder_str = time.strftime("%M:%S", time.gmtime(int(remainder)))
+                both_str = time.strftime("%H:%M:%S")+" "+remainder_str
+                rendered = font.render(both_str, True, [0,200,0])
+            if self.show:
+                if not offset:
+                    x = (self.size[0] - rendered.get_width())//2
+                    y = (self.size[1] - rendered.get_height())//2
+                    offset = (x,y)
+                screen.blit(rendered, offset)
 
-    # main loop
-    while True:
-        for e in pg.event.get():
-            if e.type == pg.QUIT or e.type == pg.KEYDOWN and (e.key == pg.K_ESCAPE or e.key == pg.K_q or e.key==pg.K_SPACE):
-                return
-
-        dt = clock.tick(FPS) / 1000
-        screen.fill(BGCOLOR)
-        # update boid logic, then draw them
-        nBoids.update(dt, SPEED, WRAP)
-        nBoids.draw(screen)
-        # if true, displays the fps in the upper left corner, for debugging
-        if SHOWFPS : screen.blit(font.render(str(int(clock.get_fps())), True, [0,200,0]), (8, 8))
-
-        pg.display.update()
+            pg.display.update()
 
 if __name__ == '__main__':
-    main()  # by Nik
+    import argparse
+    parser = argparse.ArgumentParser(prog='PyNBoids Screensaver', usage='%(prog)s [options]')
+    parser.add_argument('-c', '--clock', action='store_true', default=False, help='display the time')
+    parser.add_argument('-s', '--size', nargs=2, default=None, help='size of window, fullscreen otherwise')
+    parser.add_argument('-f', '--fish', action='store_true', default=False, help='set if you want fish')
+    parser.add_argument('-w', '--wrap', action='store_true', default=False, help='wrap')
+    parser.add_argument('-n', '--number', type=int, default=200, help='number of swimmers')
+    parser.add_argument('-b', '--bgcolor', nargs=3, type=int, default=(0,0,0), help='background color')
+    parser.add_argument('-t', '--timer', type=int, default=None, help='number of second for a timer, at the end of which, this will exit')
+    parser.add_argument('--speed', type=int, default=150, help='base speed of fish')
+    args = parser.parse_args()
+
+    show = None
+    if args.clock: show = "clock"
+    if args.timer: show = "timer"
+    if args.clock and args.timer: show = "both"
+    
+    bs = BoidScreensaver(show=show, timer=args.timer)
+    bs.fish = args.fish
+    bs.boidz = args.number
+    bs.bgcolor = args.bgcolor
+    if not args.size:
+        bs.fullscreen = True
+    else:
+        bs.size = args.size
+    bs.speed = args.speed
+    bs.wrap = args.wrap
+    bs.start()
     pg.quit()

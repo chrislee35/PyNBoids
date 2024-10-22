@@ -1,6 +1,34 @@
 # PyNBoids
 ![Preview](preview.gif "Preview")
 
+I took Niko's Boids simulation and added a few options:
+* CLI options with help (--help)
+* Clock display (--clock)
+* Timer countdown (--timer $SEC)
+* Easier configuration of rendering options
+
+```
+usage: PyNBoids Screensaver [options]
+
+options:
+  -h, --help            show this help message and exit
+  -c, --clock           display the time
+  -s SIZE SIZE, --size SIZE SIZE
+                        size of window, fullscreen otherwise
+  -f, --fish            set if you want fish
+  -w, --wrap            wrap
+  -n NUMBER, --number NUMBER
+                        number of swimmers
+  -b BGCOLOR BGCOLOR BGCOLOR, --bgcolor BGCOLOR BGCOLOR BGCOLOR
+                        background color
+  -t TIMER, --timer TIMER
+                        number of second for a timer, at the end of which, this will exit
+  --speed SPEED         base speed of fish
+```
+
+Also, each fish has a slightly different speed and the simulation speeds up and slows down over time.
+
+
 ### A Python Boids Simulation
 This is a [Boids simulation](https://en.wikipedia.org/wiki/Boids "Wikipedia"),
 written in Python3, with Pygame2 and NumPy.
