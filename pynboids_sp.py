@@ -5,7 +5,7 @@ import time
 import pygame as pg
 import typer
 from typing_extensions import Annotated
-
+from datetime import datetime, timedelta
 
 '''
 PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
@@ -242,6 +242,12 @@ class BoidScreensaver:
             pg.display.update()
 
 if __name__ == '__main__':
+
+    def seconds_until(strtime: str) -> int:
+        now = datetime.now()
+        hour, minute = [int(x) for x in strtime.split(":")]
+        return int((timedelta(hours=24) - (now - now.replace(hour=hour, minute=minute, second=0, microsecond=0))).total_seconds() % (24 * 3600))
+
     import argparse
     parser = argparse.ArgumentParser(prog='PyNBoids Screensaver', usage='%(prog)s [options]')
     parser.add_argument('-c', '--clock', action='store_true', default=False, help='display the time')
@@ -251,6 +257,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--number', type=int, default=200, help='number of swimmers')
     parser.add_argument('-b', '--bgcolor', nargs=3, type=int, default=(0,0,0), help='background color')
     parser.add_argument('-t', '--timer', type=int, default=None, help='number of second for a timer, at the end of which, this will exit')
+    parser.add_argument('-u', '--until', default=None, help='like timer, but it calculates the countdown until a given time')
     parser.add_argument('--speed', type=int, default=150, help='base speed of fish')
     parser.add_argument('-x', '--small', action='store_true', default=False, help='sets the size to a small window, no windowing')
     parser.add_argument('--top', default=None, help='sets static text at the top')
@@ -262,10 +269,14 @@ if __name__ == '__main__':
     show = None
     if args.clock: show = "clock"
     if args.timer: show = "timer"
-    if args.clock and args.timer: show = "both"
+    if args.until: show = "timer"
+    if args.clock and (args.timer or args.until): show = "both"
     
     bs.show = show
     bs.timer = args.timer
+    if args.until:
+        bs.timer = seconds_until(args.until)
+
     bs.fish = args.fish
     bs.boidz = args.number
     bs.bgcolor = args.bgcolor
