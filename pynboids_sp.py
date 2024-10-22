@@ -39,13 +39,20 @@ class Boid(pg.sprite.Sprite):
         self.grid.add(self, self.grid_lastpos)
         self.speed_factor = ((random() - 0.5)*0.5) + 1.0
 
-    def update(self, dt, speed, ejWrap=False):
+    def update(self, dt, speed, ejWrap=False, bias_dir=None):
         maxW, maxH = self.drawSurf.get_size()
         selfCenter = pg.Vector2(self.rect.center)
         turnDir = xvt = yvt = yat = xat = 0
         turnRate = 120 * dt  # about 120 seems ok
         margin = 42
-        self.ang = self.ang + randint(-4, 4)
+        if bias_dir:
+            if bias_dir > self.ang:
+                self.ang = self.ang + randint(0, 4)
+            else:
+                self.ang = self.ang + randint(-4, 0)
+            self.ang = (self.ang + 360) % 360
+        else:
+            self.ang = self.ang + randint(-4, 4)
         # Grid update stuff
         self.grid_pos = self.grid.getcell(self.pos)
         if self.grid_pos != self.grid_lastpos:
@@ -144,11 +151,13 @@ class BoidScreensaver:
         self.fish = False
         self.speed = 150
         self.bgcolor = (0,0,0)
+        self.color = (0,200,0)
         self.fps = 60
         self.timer = timer
         self.windowed = True
         self.top_text = None
         self.bottom_text = None
+        self.follow_mouse = True
         
     def start(self):
         self.start_time = time.time()
@@ -197,24 +206,38 @@ class BoidScreensaver:
             delta_t = time.time() - self.start_time
             speed = int(cos(delta_t)*(self.speed/3) + self.speed)
             
-            nBoids.update(dt, speed, self.wrap)
+            ang = None
+            if self.follow_mouse:
+                m_x, m_y = pg.mouse.get_pos()
+                if m_x != 0 or m_y != 0:
+                    dx = m_x - (self.size[0]//2)
+                    dy = (m_y - (self.size[1]//2))
+                    ang = atan2(dy, dx)
+                    ang *= 180/pi
+                    if ang < 0:
+                        ang = ang + 360
+                    ang = int(ang % 360)
+            if pg.mouse.get_pressed(num_buttons=3)[0]:
+                self.follow_mouse = not self.follow_mouse
+
+            nBoids.update(dt, speed, self.wrap, ang)
             nBoids.draw(screen)
             # if true, displays the fps in the upper left corner, for debugging
             if self.show == "clock":
-                rendered = font.render(time.strftime("%H:%M:%S"), True, [0,200,0])
+                rendered = font.render(time.strftime("%H:%M:%S"), True, self.color)
             elif self.show == "timer":
                 remainder = self.end_time - time.time()
                 if remainder < 0.0:
                     return
                 remainder_str = time.strftime("%H:%M:%S", time.gmtime(int(remainder)))
-                rendered = font.render(remainder_str, True, [0,200,0])
+                rendered = font.render(remainder_str, True, self.color)
             elif self.show == "both":
                 remainder = self.end_time - time.time()
                 if remainder < 0.0:
                     return
                 remainder_str = time.strftime("%M:%S", time.gmtime(int(remainder)))
                 both_str = time.strftime("%H:%M:%S")+" "+remainder_str
-                rendered = font.render(both_str, True, [0,200,0])
+                rendered = font.render(both_str, True, self.color)
             
             if self.show:
                 if not offset:
@@ -224,7 +247,7 @@ class BoidScreensaver:
                 screen.blit(rendered, offset)
 
             if self.top_text:
-                rendered = font.render(self.top_text, True, [0,200,0])
+                rendered = font.render(self.top_text, True, self.color)
                 if not top_offset:
                     x = (self.size[0] - rendered.get_width())//2
                     y = 5
@@ -232,7 +255,7 @@ class BoidScreensaver:
                 screen.blit(rendered, top_offset)
 
             if self.bottom_text:
-                rendered = font.render(self.bottom_text, True, [0,200,0])
+                rendered = font.render(self.bottom_text, True, self.color)
                 if not bottom_offset:
                     x = (self.size[0] - rendered.get_width())//2
                     y = self.size[1] - rendered.get_height() - 5
@@ -256,6 +279,7 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--wrap', action='store_true', default=False, help='wrap')
     parser.add_argument('-n', '--number', type=int, default=200, help='number of swimmers')
     parser.add_argument('-b', '--bgcolor', nargs=3, type=int, default=(0,0,0), help='background color')
+    parser.add_argument('--color', nargs=3, type=int, default=(0,200,0), help='text color')
     parser.add_argument('-t', '--timer', type=int, default=None, help='number of second for a timer, at the end of which, this will exit')
     parser.add_argument('-u', '--until', default=None, help='like timer, but it calculates the countdown until a given time')
     parser.add_argument('--speed', type=int, default=150, help='base speed of fish')
@@ -280,6 +304,7 @@ if __name__ == '__main__':
     bs.fish = args.fish
     bs.boidz = args.number
     bs.bgcolor = args.bgcolor
+    bs.color = args.color
     if args.small:
         bs.fullscreen = False
         bs.size = (322, 200)
