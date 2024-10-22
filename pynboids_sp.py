@@ -147,6 +147,8 @@ class BoidScreensaver:
         self.fps = 60
         self.timer = timer
         self.windowed = True
+        self.top_text = None
+        self.bottom_text = None
         
     def start(self):
         self.start_time = time.time()
@@ -177,7 +179,11 @@ class BoidScreensaver:
         if font_size > self.size[1] // 3:
             font_size = self.size[1] // 3
         font = pg.font.Font(None, font_size)
+
+        top_offset = None
+        bottom_offset = None
         offset = None
+        
         clock = pg.time.Clock()
         # main loop
         while True:
@@ -209,12 +215,29 @@ class BoidScreensaver:
                 remainder_str = time.strftime("%M:%S", time.gmtime(int(remainder)))
                 both_str = time.strftime("%H:%M:%S")+" "+remainder_str
                 rendered = font.render(both_str, True, [0,200,0])
+            
             if self.show:
                 if not offset:
                     x = (self.size[0] - rendered.get_width())//2
                     y = (self.size[1] - rendered.get_height())//2
                     offset = (x,y)
                 screen.blit(rendered, offset)
+
+            if self.top_text:
+                rendered = font.render(self.top_text, True, [0,200,0])
+                if not top_offset:
+                    x = (self.size[0] - rendered.get_width())//2
+                    y = 5
+                    top_offset = (x,y)
+                screen.blit(rendered, top_offset)
+
+            if self.bottom_text:
+                rendered = font.render(self.bottom_text, True, [0,200,0])
+                if not bottom_offset:
+                    x = (self.size[0] - rendered.get_width())//2
+                    y = self.size[1] - rendered.get_height() - 5
+                    bottom_offset = (x,y)
+                screen.blit(rendered, bottom_offset)
 
             pg.display.update()
 
@@ -230,14 +253,19 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--timer', type=int, default=None, help='number of second for a timer, at the end of which, this will exit')
     parser.add_argument('--speed', type=int, default=150, help='base speed of fish')
     parser.add_argument('-x', '--small', action='store_true', default=False, help='sets the size to a small window, no windowing')
+    parser.add_argument('--top', default=None, help='sets static text at the top')
+    parser.add_argument('--bottom', default=None, help='sets static text at the bottom')
     args = parser.parse_args()
+
+    bs = BoidScreensaver()
 
     show = None
     if args.clock: show = "clock"
     if args.timer: show = "timer"
     if args.clock and args.timer: show = "both"
     
-    bs = BoidScreensaver(show=show, timer=args.timer)
+    bs.show = show
+    bs.timer = args.timer
     bs.fish = args.fish
     bs.boidz = args.number
     bs.bgcolor = args.bgcolor
@@ -251,5 +279,7 @@ if __name__ == '__main__':
         bs.size = args.size
     bs.speed = args.speed
     bs.wrap = args.wrap
+    bs.top_text = args.top
+    bs.bottom_text = args.bottom
     bs.start()
     pg.quit()
