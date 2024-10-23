@@ -2,9 +2,9 @@
 
 `python3 ./pynboids_sp.py --clock --fish --number 40 --wrap --color 0 20 200 --follow --waves --bgcolor 10 10 50 --bubbles --bgimg Underwater-Transparent-Background.png --size 600 400 --top pynboids --bottom demo`
 
-[![Demo Video](https://github.com/user-attachments/assets/0fb46afe-3879-4f92-88ee-d8171e5432ad "Demo Video")]
+[![Demo Video](https://github.com/chrislee35/PyNBoids/raw/refs/heads/main/pynboids.mp4 "Demo Video")]
 
-I took Niko's Boids simulation and added a few options:
+I took [Niko's Boids simulation](https://github.com/Nikorasu/PyNBoids) and added a few options:
 ```
 usage: PyNBoids Screensaver [options]
 
