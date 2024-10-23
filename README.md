@@ -1,12 +1,10 @@
 # PyNBoids
-[![Preview](https://github.com/user-attachments/assets/0fb46afe-3879-4f92-88ee-d8171e5432ad "Preview")]
+
+`python3 ./pynboids_sp.py --clock --fish --number 40 --wrap --color 0 20 200 --follow --waves --bgcolor 10 10 50 --bubbles --bgimg Underwater-Transparent-Background.png --size 600 400 --top pynboids --bottom demo`
+
+[![Demo Video](https://github.com/user-attachments/assets/0fb46afe-3879-4f92-88ee-d8171e5432ad "Demo Video")]
 
 I took Niko's Boids simulation and added a few options:
-* CLI options with help (--help)
-* Clock display (--clock)
-* Timer countdown (--timer $SEC)
-* Easier configuration of rendering options
-
 ```
 usage: PyNBoids Screensaver [options]
 
@@ -31,7 +29,7 @@ options:
   -x, --small           sets the size to a small window, no windowing
   --top TOP             sets static text at the top
   --bottom BOTTOM       sets static text at the bottom
-  --follow              follow mouse direction from center
+  --follow              follow mouse direction from center (click to toggle)
   --waves               make background grow lighter and darker
   --bubbles             draw bubbles
   --bgimg BGIMG         specify an image for the background

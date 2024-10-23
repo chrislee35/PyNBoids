@@ -340,7 +340,7 @@ if __name__ == '__main__':
     parser.add_argument('-x', '--small', action='store_true', default=False, help='sets the size to a small window, no windowing')
     parser.add_argument('--top', default=None, help='sets static text at the top')
     parser.add_argument('--bottom', default=None, help='sets static text at the bottom')
-    parser.add_argument('--follow', action='store_true', default=False, help='follow mouse direction from center')
+    parser.add_argument('--follow', action='store_true', default=False, help='follow mouse direction from center (click to toggle)')
     parser.add_argument('--waves', action='store_true', default=False, help='make background grow lighter and darker')
     parser.add_argument('--bubbles', action='store_true', default=False, help='draw bubbles')
     parser.add_argument('--bgimg', default=None, help='specify an image for the background')
@@ -370,7 +370,8 @@ if __name__ == '__main__':
     elif not args.size:
         bs.fullscreen = True
     else:
-        bs.size = args.size
+        bs.fullscreen = False
+        bs.size = tuple([int(x) for x in args.size])
     bs.speed = args.speed
     bs.wrap = args.wrap
     bs.top_text = args.top
