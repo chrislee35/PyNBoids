@@ -10,6 +10,40 @@ PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
 This version uses a spatial partitioning grid to improve performance.
 Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
 '''
+class Bubble(pg.sprite.Sprite):
+    def __init__(self, drawSurf):
+        super().__init__()
+        self.drawSurf = drawSurf
+        self.image = pg.Surface((22, 22)).convert()
+        self.image.set_colorkey(0)
+        v = randint(100, 180)
+        self.color = pg.Color(v,v,v+75)  # preps color so we can use hsva
+        #self.color.hsva = (randint(0,360), 90, 90) 
+        self.bSize = 22
+        r = randint(6, 10)
+        self.speed = random()*8+1
+        pg.draw.circle(self.image, self.color, (11,11), r, 1)
+        maxW, maxH = self.drawSurf.get_size()
+        self.rect = self.image.get_rect(center=(randint(50, maxW - 50), randint(maxH - 50, maxH)))
+        self.pos = pg.Vector2(self.rect.center)
+        self.ang = 90.0
+
+    def update(self, dt, speed, ejWrap=False, bias_dir=None):
+        maxW, maxH = self.drawSurf.get_size()
+        selfCenter = pg.Vector2(self.rect.center)
+
+        if self.rect.top < 0:
+            self.pos.y = maxH
+            self.pos.x = randint(50, maxW - 50)
+        else:
+            self.pos.y -= self.speed
+            self.ang += (random()-0.5)
+            if self.ang < 85.0: self.ang = 85.0
+            if self.ang > 95.0: self.ang = 95.0
+            self.pos.x += cos(radians(self.ang))*5
+
+        # Actually update position of boid
+        self.rect.center = self.pos
 
 class Boid(pg.sprite.Sprite):
 
@@ -155,7 +189,9 @@ class BoidScreensaver:
         self.windowed = True
         self.top_text = None
         self.bottom_text = None
-        self.follow_mouse = True
+        self.follow_mouse = False
+        self.waves = False
+        self.bubbles = False
         
     def start(self):
         self.start_time = time.time()
@@ -182,6 +218,10 @@ class BoidScreensaver:
         # spawns desired # of boidz
         for n in range(self.boidz):
             nBoids.add(Boid(boidTracker, screen, self.fish))
+
+        if self.bubbles:
+            for n in range(randint(6, 20)):
+                nBoids.add(Bubble(screen))
         font_size = 260
         if font_size > self.size[1] // 3:
             font_size = self.size[1] // 3
@@ -199,10 +239,15 @@ class BoidScreensaver:
                     return
 
             dt = clock.tick(self.fps) / 1000
-            screen.fill(self.bgcolor)
             # update boid logic, then draw them
             delta_t = time.time() - self.start_time
             speed = int(cos(delta_t)*(self.speed/3) + self.speed)
+            bgcolor = self.bgcolor
+            if self.waves:
+                v = ((1-cos(delta_t)))*16
+                bgcolor = (bgcolor[0]+v,bgcolor[1]+v,bgcolor[2]+v)
+
+            screen.fill(bgcolor)
             
             ang = None
             if self.follow_mouse:
@@ -210,8 +255,7 @@ class BoidScreensaver:
                 if m_x != 0 or m_y != 0:
                     dx = m_x - (self.size[0]//2)
                     dy = (m_y - (self.size[1]//2))
-                    ang = atan2(dy, dx)
-                    ang *= 180/pi
+                    ang = degrees(atan2(dy, dx))
                     if ang < 0:
                         ang = ang + 360
                     ang = int(ang % 360)
@@ -285,6 +329,8 @@ if __name__ == '__main__':
     parser.add_argument('--top', default=None, help='sets static text at the top')
     parser.add_argument('--bottom', default=None, help='sets static text at the bottom')
     parser.add_argument('--follow', action='store_true', default=False, help='follow mouse direction from center')
+    parser.add_argument('--waves', action='store_true', default=False, help='make background grow lighter and darker')
+    parser.add_argument('--bubbles', action='store_true', default=False, help='draw bubbles')
     args = parser.parse_args()
 
     bs = BoidScreensaver()
@@ -317,5 +363,7 @@ if __name__ == '__main__':
     bs.top_text = args.top
     bs.bottom_text = args.bottom
     bs.follow_mouse = args.follow
+    bs.waves = args.waves
+    bs.bubbles = args.bubbles
     bs.start()
     pg.quit()
