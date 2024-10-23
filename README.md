@@ -34,6 +34,7 @@ options:
   --follow              follow mouse direction from center
   --waves               make background grow lighter and darker
   --bubbles             draw bubbles
+  --bgimg BGIMG         specify an image for the background
 ```
 
 Also, each fish has a slightly different speed and the simulation speeds up and slows down over time.

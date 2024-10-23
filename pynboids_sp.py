@@ -192,7 +192,8 @@ class BoidScreensaver:
         self.follow_mouse = False
         self.waves = False
         self.bubbles = False
-        
+        self.bgimg = None
+
     def start(self):
         self.start_time = time.time()
         if self.timer:
@@ -230,6 +231,14 @@ class BoidScreensaver:
         top_offset = None
         bottom_offset = None
         offset = None
+
+        if self.bgimg:
+            self.bgimg = pg.image.load(self.bgimg).convert_alpha()
+            w = self.bgimg.get_width()
+            h = self.bgimg.get_height()
+            scale = max( [self.size[0]/w, self.size[1]/h] )
+            print(scale)
+            self.bgimg = pg.transform.scale(self.bgimg, (int(w*scale), int(h*scale)))
         
         clock = pg.time.Clock()
         # main loop
@@ -248,6 +257,9 @@ class BoidScreensaver:
                 bgcolor = (bgcolor[0]+v,bgcolor[1]+v,bgcolor[2]+v)
 
             screen.fill(bgcolor)
+
+            if self.bgimg:
+                screen.blit(self.bgimg, self.bgimg.get_rect(center = screen.get_rect().center))
             
             ang = None
             if self.follow_mouse:
@@ -331,6 +343,7 @@ if __name__ == '__main__':
     parser.add_argument('--follow', action='store_true', default=False, help='follow mouse direction from center')
     parser.add_argument('--waves', action='store_true', default=False, help='make background grow lighter and darker')
     parser.add_argument('--bubbles', action='store_true', default=False, help='draw bubbles')
+    parser.add_argument('--bgimg', default=None, help='specify an image for the background')
     args = parser.parse_args()
 
     bs = BoidScreensaver()
@@ -365,5 +378,6 @@ if __name__ == '__main__':
     bs.follow_mouse = args.follow
     bs.waves = args.waves
     bs.bubbles = args.bubbles
+    bs.bgimg = args.bgimg
     bs.start()
     pg.quit()
